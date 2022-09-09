@@ -309,8 +309,8 @@ def built_table(columns, data):
 
     coordinates = [(i[0]+i[1])//2 for i in coordinates]
     coordinates.sort()
-    print(coordinates)
-    print("tamaño original: ", len(coordinates))
+    #print(coordinates)
+    #print("tamaño original: ", len(coordinates))
     histograma(coordinates)
     #coordinates.sort()
     #print(coordinates)
@@ -318,7 +318,7 @@ def built_table(columns, data):
 
 
 def main():
-    path = r'C:\Users\epenago\Pictures\reto\12.PNG'
+    path = r'C:\Users\epenago\Pictures\reto\4.PNG'
     #path = '.\pagina2.PNG'
     image = cv2.imread(path)
     gray = get_grayscale(image)
@@ -332,7 +332,7 @@ def main():
     data = pytesseract.image_to_data(img, lang= 'eng+spa', config=custom_config, output_type= 'dict')
     data_text = pytesseract.image_to_data(img, lang= 'eng+spa', config=custom_config, output_type= 'string')
 
-    #print(data_text)
+    print(data_text)
     #print(data['text'])
     #print(len(data['text']))
     indice_words = []
@@ -351,7 +351,7 @@ def main():
     #print("numero de posiciones: " + str(len(coordenadas)))
 
     for i in data_organizer:
-        #print(i)
+        print(i)
         pass
 
     print("numero de columnas", num_column(data_organizer))
