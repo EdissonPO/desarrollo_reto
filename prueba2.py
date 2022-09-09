@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import os
 #from PyPDF2 import PdfReader
 #%matplotlib inline
-pytesseract.pytesseract.tesseract_cmd = r'C:\Users\epenago\AppData\Local\Tesseract-OCR\tesseract.exe'
+#pytesseract.pytesseract.tesseract_cmd = r'C:\Users\epenago\AppData\Local\Tesseract-OCR\tesseract.exe'
 
 
 def histograma(datos):
@@ -112,7 +112,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
             index.append(indices[i])
             
             if i < len(indices)-1:
-                if (int(diccionario["top"][indices[i]]) >= int(diccionario["top"][indices[i+1]]) and int(diccionario["top"][indices[i]]) < int(diccionario["top"][indices[i+1]])+10 or int(diccionario["top"][indices[i]]) < int(diccionario["top"][indices[i+1]]) and int(diccionario["top"][indices[i]]) > int(diccionario["top"][indices[i+1]])-10):
+                if (int(diccionario["top"][indices[i]]) >= int(diccionario["top"][indices[i+1]]) and int(diccionario["top"][indices[i]]) < int(diccionario["top"][indices[i+1]])+13 or int(diccionario["top"][indices[i]]) < int(diccionario["top"][indices[i+1]]) and int(diccionario["top"][indices[i]]) > int(diccionario["top"][indices[i+1]])-13):
                     
                     if (diccionario["left"][indices[i+1]] - suma) < intervalo[0] or (diccionario["left"][indices[i+1]] - suma) > intervalo[1]:
                         bandera = True
@@ -180,7 +180,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
             index.append(indices[i])
 
             suma += int(diccionario["width"][indices[i]] + (diccionario["left"][indices[i]] - suma))
-            if (int(diccionario["top"][indices[i]]) >= int(diccionario["top"][indices[i+1]]) and int(diccionario["top"][indices[i]]) < int(diccionario["top"][indices[i+1]])+10 or int(diccionario["top"][indices[i]]) < int(diccionario["top"][indices[i+1]]) and int(diccionario["top"][indices[i]]) > int(diccionario["top"][indices[i+1]])-10):
+            if (int(diccionario["top"][indices[i]]) >= int(diccionario["top"][indices[i+1]]) and int(diccionario["top"][indices[i]]) < int(diccionario["top"][indices[i+1]])+13 or int(diccionario["top"][indices[i]]) < int(diccionario["top"][indices[i+1]]) and int(diccionario["top"][indices[i]]) > int(diccionario["top"][indices[i+1]])-13):
                 
                 if (diccionario["left"][indices[i+1]] - suma) < intervalo[0] or (diccionario["left"][indices[i+1]] - suma) > intervalo[1]:
                     bandera = True
@@ -301,24 +301,60 @@ def num_column(datos):
     return st.mode(arr)
 
 
-def built_table(columns, data):
+def built_table(data):
 
     coordinates = []
     for i in range(len(data)):
        coordinates.append(data[i]["coordinates"])
+       #coordinates += data[i]["coordinates"]
+    #print(coordinates)
+    #coordinates = [(i[0]+i[1])//2 for i in coordinates]
 
-    coordinates = [(i[0]+i[1])//2 for i in coordinates]
+    #busquemos las columnas que tienen texto
+    coordinates_left = [i[0] for i in coordinates]
+    coordinates_righ = [i[1] for i in coordinates]
+
+    frecuency_left = {}
+    frecuency_righ = {}
+    for i,j in coordinates:
+        if i not in frecuency_left:
+            frecuency_left[i]=0
+        else:
+            frecuency_left[i] += 1
+
+        if j not in frecuency_righ:
+            frecuency_righ[j]=0
+        else:
+            frecuency_righ[j] += 1
+
+    frecuency_left = sorted(frecuency_left.items())
+    frecuency_left = {i[0]:i[1] for i in frecuency_left}
+
+    frecuency_righ = sorted(frecuency_righ.items())
+    frecuency_righ = {i[0]:i[1] for i in frecuency_righ}
+
+    print("---------------------------")
+    print(frecuency_left)
+    print("---------------------------")
+    print(frecuency_righ)
+
+    plt.bar(range(len(frecuency_left)),frecuency_left.values(), edgecolor="black")
+    plt.xticks(range(len(frecuency_left.keys())), frecuency_left.keys())
+    plt.ylim(min(frecuency_left.values())-1 , max(frecuency_left.values())+1)
+    plt.show()
+    
+
+    print("tamaño original: ", len(coordinates))
     coordinates.sort()
     #print(coordinates)
-    #print("tamaño original: ", len(coordinates))
-    histograma(coordinates)
+    #histograma(coordinates)
     #coordinates.sort()
     #print(coordinates)
     
 
 
 def main():
-    path = r'C:\Users\epenago\Pictures\reto\4.PNG'
+    path = r'./reto/1.PNG'
     #path = '.\pagina2.PNG'
     image = cv2.imread(path)
     gray = get_grayscale(image)
@@ -357,7 +393,7 @@ def main():
     print("numero de columnas", num_column(data_organizer))
     
 
-    built_table(num_column(data_organizer), data_organizer)
+    built_table(data_organizer)
 
     for p in coordenadas:
         cv2.rectangle(img, (p[0], p[1]),(p[2], p[3]), (50, 50, 255), 1)
