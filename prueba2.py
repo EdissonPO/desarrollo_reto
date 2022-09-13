@@ -300,7 +300,162 @@ def num_column(datos):
           
     return st.mode(arr)
 
+def compare_intervals(data):
 
+    arr = np.array(data)
+    colums = []
+    
+    for i in np.arange(len(arr)):
+        temp = []
+        temp.append(i)
+        for j in np.arange(len(arr)):
+
+            if i == j: continue
+            interval1 = np.arange(arr[i,0], arr[i,1]+1, dtype=int)
+            interval2 = np.arange(arr[j,0], arr[j,1]+1, dtype=int)
+
+            sum = 0
+            for k in interval1:
+                if k in interval2:
+                    sum += 1
+    
+            tamaño1 = len(interval1)
+            tamaño2 = len(interval2)
+            percent1 = int((100/tamaño1)*sum )
+            percent2 = int((100/tamaño2)*sum )
+            """
+            print("tamaño1: ", tamaño1)
+            print("tamaño2: ", tamaño2)
+            print("la suma: ", sum)
+            print("percent1: ", percent1, "%")
+            print("percent2: ", percent2, "%")
+            """
+            if percent1 > 55 and percent2 > 55:
+                temp.append(j)
+        
+        colums.append(temp)
+        
+    cl = []
+    descartados = []
+    for i in np.arange(len(colums)):
+        temp = []
+        temp = colums[i]
+        if i in descartados: continue
+        for j in np.arange(len(colums)):
+
+            if i == j: continue
+            interval1 = colums[i]
+            interval2 = colums[j]
+
+            sum = 0
+            for k in interval1:
+                if k in interval2:
+                    sum += 1
+    
+            tamaño1 = len(interval1)
+            tamaño2 = len(interval2)
+            percent1 = int((100/tamaño1)*sum )
+            percent2 = int((100/tamaño2)*sum )
+            """
+            print("tamaño1: ", tamaño1)
+            print("tamaño2: ", tamaño2)
+            print("la suma: ", sum)
+            print("percent1: ", percent1, "%")
+            print("percent2: ", percent2, "%")
+            """
+            if percent1 > 30 or percent2 > 30:
+                temp += colums[j]
+                descartados.append(j)
+        cl.append(temp)
+
+    colums = []    
+    #se eliminan elementos repetidos en las columnas
+    for element in cl:
+        temp = []
+        for i in element:
+            if i not in temp:
+                temp.append(i)
+        colums.append(temp)
+    
+
+    print("el tamaño de cl es: ", len(cl))
+    #en este bloque se saca la pocision en pixeles de la imagen
+    min_max = []
+    for element in colums:   
+        menor = arr[element[0],0]
+        mayor = arr[element[0],1]
+        for i in element:
+            if arr[i,0] < menor:
+                menor = arr[i,0]
+            
+            if arr[i,1] > mayor:
+                mayor = arr[i,1]
+        min_max.append((menor,mayor))
+
+    for i in range(len(min_max)):
+        print(min_max[i], colums[i])
+
+    cl = []
+    descartados = []
+    by_delete = []
+    for i in range(len(min_max)):
+        temp= []
+        temp= colums[i]
+        if i in descartados: continue
+        for j in range(len(min_max)):
+
+            if i==j: continue
+            if min_max[i][0]-10 <= min_max[j][0] and min_max[i][1]+10 >= min_max[j][1]:
+                temp += colums[j]
+                descartados.append(j)
+                if i > j:
+                    by_delete.append(colums[j])
+        cl.append(temp)
+
+    colums = cl
+    print("estos son a eliminar", by_delete)
+    for k in by_delete:
+        colums.remove(k)
+
+    print()
+    zises = []
+    for element in colums:
+        print(element)
+        zises.append(len(element))
+    
+    mean = st.mean(zises)
+    print("la media de los len ", mean)
+    by_delete = []
+    for i in range(len(colums)):
+        percent20 = (mean/100)*20
+        print("percent20: ", percent20)
+        if len(colums[i]) < percent20:
+            by_delete.append(colums[i])
+
+    for element in colums:
+        print(element)
+        print
+
+    print("elementos a eliminar: ", by_delete)
+    for k in by_delete:
+        colums.remove(k)
+
+    for element in colums:
+        print(element)
+    
+
+    return colums
+    
+                    
+    """
+    for element in colums:
+        for i in element:
+            print(data[i]["text"], end=" ")
+            print(i)
+        print()
+        print()
+    """
+    
 def built_table(data):
 
     coordinates = []
@@ -311,6 +466,15 @@ def built_table(data):
     #coordinates = [(i[0]+i[1])//2 for i in coordinates]
 
     #busquemos las columnas que tienen texto
+    colums = compare_intervals(coordinates)
+
+    
+
+    """
+    print(coordinates)
+    print()
+    compare_intervals(coordinates, data)
+
     coordinates_left = [i[0] for i in coordinates]
     coordinates_righ = [i[1] for i in coordinates]
 
@@ -328,10 +492,10 @@ def built_table(data):
             frecuency_righ[j] += 1
 
     frecuency_left = sorted(frecuency_left.items())
-    frecuency_left = {i[0]:i[1] for i in frecuency_left}
+    frecuency_left = {i[0]:i[1]+1 for i in frecuency_left}
 
     frecuency_righ = sorted(frecuency_righ.items())
-    frecuency_righ = {i[0]:i[1] for i in frecuency_righ}
+    frecuency_righ = {i[0]:i[1]+1 for i in frecuency_righ}
 
     print("---------------------------")
     print(frecuency_left)
@@ -350,11 +514,12 @@ def built_table(data):
     #histograma(coordinates)
     #coordinates.sort()
     #print(coordinates)
+    """
     
 
 
 def main():
-    path = r'./reto/1.PNG'
+    path = r'./reto/12.PNG'
     #path = '.\pagina2.PNG'
     image = cv2.imread(path)
     gray = get_grayscale(image)
@@ -368,7 +533,7 @@ def main():
     data = pytesseract.image_to_data(img, lang= 'eng+spa', config=custom_config, output_type= 'dict')
     data_text = pytesseract.image_to_data(img, lang= 'eng+spa', config=custom_config, output_type= 'string')
 
-    print(data_text)
+    #print(data_text)
     #print(data['text'])
     #print(len(data['text']))
     indice_words = []
@@ -388,12 +553,14 @@ def main():
 
     for i in data_organizer:
         print(i)
-        pass
+        
 
-    print("numero de columnas", num_column(data_organizer))
+    #print("numero de columnas", num_column(data_organizer))
+
+   
+    built_table(data_organizer)   
     
-
-    built_table(data_organizer)
+    
 
     for p in coordenadas:
         cv2.rectangle(img, (p[0], p[1]),(p[2], p[3]), (50, 50, 255), 1)
