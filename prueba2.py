@@ -4,11 +4,12 @@ import pytesseract
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import random
 #import matplotlib.pyplot as plt
 import os
 #from PyPDF2 import PdfReader
 #%matplotlib inline
-#pytesseract.pytesseract.tesseract_cmd = r'C:\Users\epenago\AppData\Local\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = r'C:\Users\epenago\AppData\Local\Tesseract-OCR\tesseract.exe'
 
 
 def histograma(datos):
@@ -124,7 +125,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
                         
                         dict["text"] = string
                         dict["line"] = line
-                        dict["index"] = index
+                        dict["index"] = tuple(index)
                         dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                         datos_extraidos.append(dict)
                                                                     
@@ -145,7 +146,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
 
                     dict["text"] = string
                     dict["line"] = line
-                    dict["index"] = index
+                    dict["index"] = tuple(index)
                     dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                     datos_extraidos.append(dict)
                                                                 
@@ -164,7 +165,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
 
                     dict["text"] = string
                     dict["line"] = line
-                    dict["index"] = index
+                    dict["index"] = tuple(index)
                     dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                     datos_extraidos.append(dict)
                                                                 
@@ -192,7 +193,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
 
                     dict["text"] = string
                     dict["line"] = line
-                    dict["index"] = index
+                    dict["index"] = tuple(index)
                     dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                     datos_extraidos.append(dict)
                                                                 
@@ -212,7 +213,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
 
                 dict["text"] = string
                 dict["line"] = line
-                dict["index"] = index
+                dict["index"] = tuple(index)
                 dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                 datos_extraidos.append(dict)
                                                             
@@ -300,9 +301,14 @@ def num_column(datos):
           
     return st.mode(arr)
 
-def compare_intervals(data):
 
-    arr = np.array(data)
+def extracion_colums(data):
+
+    coordinates = []
+    for i in range(len(data)):
+       coordinates.append(data[i]["coordinates"])
+
+    arr = np.array(coordinates)
     colums = []
     
     for i in np.arange(len(arr)):
@@ -442,38 +448,28 @@ def compare_intervals(data):
 
     for element in colums:
         print(element)
-    
 
-    return colums
-    
-                    
-    """
-    for element in colums:
+    min_max_h= []
+    for element in colums:   
+        menor = arr[element[0],0]
+        mayor = arr[element[0],1]
         for i in element:
-            print(data[i]["text"], end=" ")
-            print(i)
-        print()
-        print()
-    """
+            if arr[i,0] < menor:
+                menor = arr[i,0]
+            
+            if arr[i,1] > mayor:
+                mayor = arr[i,1]
+        min_max_h.append((menor,mayor))
+    
+    return min_max_h,colums
+    
     
 def built_table(data):
-
-    coordinates = []
-    for i in range(len(data)):
-       coordinates.append(data[i]["coordinates"])
-       #coordinates += data[i]["coordinates"]
-    #print(coordinates)
-    #coordinates = [(i[0]+i[1])//2 for i in coordinates]
-
-    #busquemos las columnas que tienen texto
-    colums = compare_intervals(coordinates)
-
-    
-
+    pass
     """
     print(coordinates)
     print()
-    compare_intervals(coordinates, data)
+    extracion_colums(coordinates, data)
 
     coordinates_left = [i[0] for i in coordinates]
     coordinates_righ = [i[1] for i in coordinates]
@@ -519,8 +515,8 @@ def built_table(data):
 
 
 def main():
-    path = r'./reto/12.PNG'
-    #path = '.\pagina2.PNG'
+    #path = r'./reto/1.PNG'
+    path = r'.\reto\4.PNG'
     image = cv2.imread(path)
     gray = get_grayscale(image)
     th = thresholding(gray)
@@ -541,7 +537,6 @@ def main():
         if data['text'][i] != '' and data['text'][i] != ' ' and float(data['conf'][i]) >= 50 and data["text"][i] != "-" and data["text"][i] != "--":
             indice_words.append(i)
 
-
     #print(len(indice_words))
     #print(indice_words)
     print(data.keys())
@@ -553,20 +548,27 @@ def main():
 
     for i in data_organizer:
         print(i)
-        
 
-    #print("numero de columnas", num_column(data_organizer))
+    min_max_h,colums = extracion_colums(data_organizer)
 
-   
-    built_table(data_organizer)   
-    
-    
+    """
+    #Dibujado de los rectangulos en la imagen
+    for p in min_max_h:
+        cv2.rectangle(img, (p[0], hImg-5),(p[1], 5), (random.randint(0,255), random.randint(0,255), random.randint(0,255)), 1)
 
     for p in coordenadas:
         cv2.rectangle(img, (p[0], p[1]),(p[2], p[3]), (50, 50, 255), 1)
+    """
 
-    
-    #extraccion_text()
+    """
+    #impresion del texto de las columnas
+    for colum in colums:
+        print()
+        print()
+        for i in colum:
+            print(data_organizer[i]["text"])
+    """
+
     cv2.imwrite('salida.png',img)
     img = cv2.resize(img, (600, 700))
     
