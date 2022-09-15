@@ -125,7 +125,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
                         
                         dict["text"] = string
                         dict["line"] = line
-                        dict["index"] = tuple(index)
+                        dict["index"] = index
                         dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                         datos_extraidos.append(dict)
                                                                     
@@ -146,7 +146,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
 
                     dict["text"] = string
                     dict["line"] = line
-                    dict["index"] = tuple(index)
+                    dict["index"] = index
                     dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                     datos_extraidos.append(dict)
                                                                 
@@ -165,7 +165,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
 
                     dict["text"] = string
                     dict["line"] = line
-                    dict["index"] = tuple(index)
+                    dict["index"] = index
                     dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                     datos_extraidos.append(dict)
                                                                 
@@ -193,7 +193,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
 
                     dict["text"] = string
                     dict["line"] = line
-                    dict["index"] = tuple(index)
+                    dict["index"] = index
                     dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                     datos_extraidos.append(dict)
                                                                 
@@ -213,7 +213,7 @@ def coordenadas_extraccion(diccionario, indices, intervalo):
 
                 dict["text"] = string
                 dict["line"] = line
-                dict["index"] = tuple(index)
+                dict["index"] = index
                 dict["coordinates"] = (diccionario["left"][indices[indice_anterior]], suma)
                 datos_extraidos.append(dict)
                                                             
@@ -434,7 +434,7 @@ def extracion_colums(data):
     by_delete = []
     for i in range(len(colums)):
         percent20 = (mean/100)*20
-        print("percent20: ", percent20)
+        #print("percent20: ", percent20)
         if len(colums[i]) < percent20:
             by_delete.append(colums[i])
 
@@ -460,12 +460,26 @@ def extracion_colums(data):
             if arr[i,1] > mayor:
                 mayor = arr[i,1]
         min_max_h.append((menor,mayor))
+
+    min_max_h_unOrder = min_max_h.copy()
+    min_max_h.sort()
+
+    cl = []
+    for i in np.arange(len(colums)):
+        for j in np.arange(len(colums)):
+            if min_max_h_unOrder[j] == min_max_h[i]:
+                cl.append(colums[j])
+
+    colums = cl
+    print(min_max_h)
     
     return min_max_h,colums
     
     
-def built_table(data):
-    pass
+def built_table(data, colums):
+    
+
+    
     """
     print(coordinates)
     print()
@@ -513,7 +527,6 @@ def built_table(data):
     """
     
 
-
 def main():
     #path = r'./reto/1.PNG'
     path = r'.\reto\4.PNG'
@@ -551,24 +564,21 @@ def main():
 
     min_max_h,colums = extracion_colums(data_organizer)
 
-    """
+    
     #Dibujado de los rectangulos en la imagen
     for p in min_max_h:
         cv2.rectangle(img, (p[0], hImg-5),(p[1], 5), (random.randint(0,255), random.randint(0,255), random.randint(0,255)), 1)
 
     for p in coordenadas:
         cv2.rectangle(img, (p[0], p[1]),(p[2], p[3]), (50, 50, 255), 1)
-    """
-
-    """
+    
     #impresion del texto de las columnas
     for colum in colums:
         print()
         print()
         for i in colum:
             print(data_organizer[i]["text"])
-    """
-
+    
     cv2.imwrite('salida.png',img)
     img = cv2.resize(img, (600, 700))
     
@@ -576,7 +586,6 @@ def main():
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     
-
 if __name__ == '__main__':
     main()
 
