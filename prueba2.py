@@ -1,3 +1,4 @@
+from functools import reduce
 import statistics as st
 import cv2
 import pytesseract
@@ -478,7 +479,36 @@ def extracion_colums(data):
     
 def built_table(data, colums):
     
+    pd_dataOrdenizer = pd.DataFrame(data)
+    print(pd_dataOrdenizer)
+    #busco el numero de filas
+    num_rows = 0 
+    for element in data:
+        if element["line"] > num_rows:
+            num_rows = element["line"]
 
+    #transformacion de las columnas en texto y en el 
+    #orden correcto
+    new_column = []
+    colums_text = []
+    bandera = False
+    for i in range(len(colums)):
+        for j in range(len(colums[i])):
+            if data[colums[i][j]]["line"] == j:
+                new_column.append(data[colums[i][j]]["text"])
+                bandera = True
+        if bandera == False:
+            new_column.append("--")
+        colums_text.append(new_column)
+        new_column = []
+
+
+    for element in colums_text:
+        print()
+        print()
+        for item in element:
+            print(i)
+    print("the number of rows is: ", num_rows)
     
     """
     print(coordinates)
@@ -529,7 +559,7 @@ def built_table(data, colums):
 
 def main():
     #path = r'./reto/1.PNG'
-    path = r'.\reto\4.PNG'
+    path = r'.\reto\1.PNG'
     image = cv2.imread(path)
     gray = get_grayscale(image)
     th = thresholding(gray)
@@ -559,10 +589,9 @@ def main():
     coordenadas,data_organizer = coordenadas_extraccion(data,indice_words, intervalo)
     #print("numero de posiciones: " + str(len(coordenadas)))
 
-    for i in data_organizer:
-        print(i)
-
     min_max_h,colums = extracion_colums(data_organizer)
+
+    pd_data = built_table(data_organizer, colums)
 
     
     #Dibujado de los rectangulos en la imagen
