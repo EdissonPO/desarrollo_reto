@@ -303,13 +303,9 @@ def num_column(datos):
     return st.mode(arr)
 
 
-def extracion_colums(data):
+def extracion_colums(df):
 
-    coordinates = []
-    for i in range(len(data)):
-       coordinates.append(data[i]["coordinates"])
-
-    arr = np.array(coordinates)
+    arr = np.array(df["coordinates"].to_list())
     colums = []
     
     for i in np.arange(len(arr)):
@@ -370,7 +366,7 @@ def extracion_colums(data):
             print("percent1: ", percent1, "%")
             print("percent2: ", percent2, "%")
             """
-            if percent1 > 30 or percent2 > 30:
+            if percent1 > 50 or percent2 > 50:
                 temp += colums[j]
                 descartados.append(j)
         cl.append(temp)
@@ -472,43 +468,26 @@ def extracion_colums(data):
                 cl.append(colums[j])
 
     colums = cl
+
     print(min_max_h)
     
     return min_max_h,colums
     
     
-def built_table(data, colums):
-    
-    pd_dataOrdenizer = pd.DataFrame(data)
-    print(pd_dataOrdenizer)
-    #busco el numero de filas
-    num_rows = 0 
-    for element in data:
-        if element["line"] > num_rows:
-            num_rows = element["line"]
-
-    #transformacion de las columnas en texto y en el 
-    #orden correcto
-    new_column = []
-    colums_text = []
-    bandera = False
+def build_df(data_organizer, colums):
+    pd_dataOrdenizer = pd.DataFrame(data_organizer)
+    temp = pd.DataFrame()
+    pd_columns = pd.DataFrame()
     for i in range(len(colums)):
-        for j in range(len(colums[i])):
-            if data[colums[i][j]]["line"] == j:
-                new_column.append(data[colums[i][j]]["text"])
-                bandera = True
-        if bandera == False:
-            new_column.append("--")
-        colums_text.append(new_column)
-        new_column = []
+        temp = pd.DataFrame.copy(pd_dataOrdenizer.loc[colums[i], ["text", "line"]])
+        temp = temp.drop_duplicates()
+        temp = temp.sort_values("line")
+        temp = pd.Series(temp["text"].tolist(), index=temp["line"].tolist())
+        temp = temp.loc[~temp.index.duplicated(keep='first')]
+        pd_columns = pd.concat([pd_columns, temp], axis=1, ignore_index=True)
 
-
-    for element in colums_text:
-        print()
-        print()
-        for item in element:
-            print(i)
-    print("the number of rows is: ", num_rows)
+    pd_columns = pd_columns.sort_index()
+    return pd_columns
     
     """
     print(coordinates)
@@ -567,14 +546,12 @@ def main():
     cannyy = canny(gray)
     img = image
     hImg, wImg, _ = img.shape
-    
-    custom_config = r'-c tessedit_char_blacklist=$¢§_{} --oem 3 --psm 4' 
+
+    custom_config = r'-c tessedit_char_blacklist=$¢§_{}s --oem 3 --psm 4' 
     data = pytesseract.image_to_data(img, lang= 'eng+spa', config=custom_config, output_type= 'dict')
     data_text = pytesseract.image_to_data(img, lang= 'eng+spa', config=custom_config, output_type= 'string')
 
-    #print(data_text)
-    #print(data['text'])
-    #print(len(data['text']))
+
     indice_words = []
     for i in range(len(data['text'])):
         if data['text'][i] != '' and data['text'][i] != ' ' and float(data['conf'][i]) >= 50 and data["text"][i] != "-" and data["text"][i] != "--":
@@ -587,33 +564,40 @@ def main():
     intervalo = calcular_espacios(data, indice_words)
     print(intervalo)
     coordenadas,data_organizer = coordenadas_extraccion(data,indice_words, intervalo)
+    df_data_organizer = pd.DataFrame(data_organizer)
+
     #print("numero de posiciones: " + str(len(coordenadas)))
 
-    min_max_h,colums = extracion_colums(data_organizer)
+    min_max_h,colums = extracion_colums(df_data_organizer)
 
-    pd_data = built_table(data_organizer, colums)
-
-    
     #Dibujado de los rectangulos en la imagen
     for p in min_max_h:
         cv2.rectangle(img, (p[0], hImg-5),(p[1], 5), (random.randint(0,255), random.randint(0,255), random.randint(0,255)), 1)
 
     for p in coordenadas:
         cv2.rectangle(img, (p[0], p[1]),(p[2], p[3]), (50, 50, 255), 1)
-    
+
+    cv2.imwrite('salida.png',img)
+
+    df = pd.DataFrame(build_df(data_organizer, colums))
+    df.to_excel("data.xlsx", index=False)
+    print(df)
+    """
     #impresion del texto de las columnas
     for colum in colums:
         print()
         print()
         for i in colum:
             print(data_organizer[i]["text"])
-    
+
     cv2.imwrite('salida.png',img)
     img = cv2.resize(img, (600, 700))
-    
+
     cv2.imshow('Result', img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+    """
+
     
 if __name__ == '__main__':
     main()
